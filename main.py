@@ -8,6 +8,7 @@ import filters
 from reactions import handle_reactions
 from bot_sender import send_to_bot
 
+
 processed_messages = set()
 MAX_CACHE = 5000
 
@@ -118,28 +119,29 @@ async def handler(event):
 
         print("🔥 ГОРЯЧИЙ ЛИД" if result == "HOT" else "❄️ ХОЛОДНЫЙ ЛИД")
 
-        # отправка через бота
         send_to_bot(message_text, topic_id)
 
     except Exception as e:
         print("Ошибка:", e)
 
 
-print("🚀 Подключаем Telegram...")
+async def main():
 
-client.connect()
+    print("🚀 Подключаем Telegram...")
 
-# проверка авторизации сессии
-if not client.is_user_authorized():
-    print("❌ Сессия не авторизована. Загрузите session.session")
-    exit()
+    await client.connect()
 
-print("✅ Telegram подключен")
-print("👀 Парсер слушает группы в реальном времени")
+    if not await client.is_user_authorized():
+        print("❌ Сессия не авторизована")
+        return
+
+    print("✅ Telegram подключен")
+    print("👀 Парсер слушает группы")
+
+    # запуск системы реакций
+    client.loop.create_task(handle_reactions(client))
+
+    await client.run_until_disconnected()
 
 
-# запуск системы реакций
-client.loop.create_task(handle_reactions(client))
-
-
-client.run_until_disconnected()
+asyncio.run(main())
