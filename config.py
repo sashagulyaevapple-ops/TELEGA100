@@ -42,3 +42,6 @@ TOPICS = {
     "reactions": 16,# РЕАКЦИИ
     "stats": 11     # СТАТИСТИКА
 }
+
+BOT_TOKEN = "8641354429:AAGUxDq--XoEJE_xvhlJlhzdaLSC5F4ECTE"
+BOT_CHAT_ID = -1003566638706

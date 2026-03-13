@@ -7,6 +7,7 @@ import keywords
 import filters
 from sender import send_lead
 from reactions import handle_reactions
+from bot_sender import send_to_bot
 
 processed_messages = set()
 MAX_CACHE = 5000
@@ -112,6 +113,9 @@ async def handler(event):
             link,
             user
         )
+
+        # отправка через бота
+        send_to_bot(message_text, topic_id)
 
     except Exception as e:
         print("Ошибка:", e)
