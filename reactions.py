@@ -1,57 +1,66 @@
 from telethon import events
+from telethon.tl.types import PeerChannel, PeerChat, PeerUser
 import config
 from bot_sender import delete_message, send_to_topic
 
 async def handle_reactions(client):
+    """
+    Ловим реакции на сообщения в форуме.
+    Аккаунт Telethon слушает события UpdateMessageReactions.
+    Действия выполняет бот.
+    """
 
     @client.on(events.Raw)
     async def reaction_handler(event):
-
         # ловим только события реакций
         if event.__class__.__name__ != "UpdateMessageReactions":
             return
 
         try:
-            chat_id = event.peer.channel_id
-            message_id = event.msg_id
-
-            # получаем сообщение
-            message = await client.get_messages(chat_id, ids=message_id)
-
-            if not message:
+            # получаем chat_id в зависимости от типа peer
+            if isinstance(event.peer, PeerChannel):
+                chat_id = event.peer.channel_id
+            elif isinstance(event.peer, PeerChat):
+                chat_id = event.peer.chat_id
+            elif isinstance(event.peer, PeerUser):
+                chat_id = event.peer.user_id
+            else:
                 return
 
+            message_id = event.msg_id
+
+            # получаем текст сообщения
+            message = await client.get_messages(chat_id, ids=message_id)
+            if not message or not message.text:
+                return
             text = message.text
 
-            # реакции
-            for r in event.reactions.recent_reactions:
+            # проверяем, что сообщение находится в форуме, куда бот может писать
+            if chat_id != config.FORUM_ID:
+                return
 
+            # обрабатываем реакции
+            for r in event.reactions.recent_reactions:
                 emoji = r.reaction.emoticon
 
-                # 💩 удалить
+                # 💩 удалить сообщение
                 if emoji == "💩":
-
                     delete_message(message.id)
+                    print(f"💩 Лид удален: {text[:50]}...")
 
-                    print("💩 Лид удален")
-
-                # 🎉 лучшие
+                # 🎉 отправить в BEST
                 elif emoji == "🎉":
-
                     send_to_topic(text, config.TOPICS["best"])
+                    print(f"🎉 Лид отправлен в BEST: {text[:50]}...")
 
-                    print("🎉 Лид отправлен в ЛУЧШИЕ")
-
-                # 🕊 в работу
+                # 🕊 отправить в WORK
                 elif emoji == "🕊":
-
                     send_to_topic(text, config.TOPICS["work"])
+                    print(f"🕊 Лид отправлен в WORK: {text[:50]}...")
 
-                    print("🕊 Лид отправлен В РАБОТУ")
-
-                # лог реакций
+                # логируем все реакции
                 send_to_topic(
-                    f"Новая реакция {emoji}\n\n{text}",
+                    f"Новая реакция {emoji} на сообщение:\n{text}",
                     config.TOPICS["reactions"]
                 )
 
