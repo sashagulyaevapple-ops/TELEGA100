@@ -1,6 +1,6 @@
 from telethon import events
 import config
-
+from bot_sender import delete_message, send_to_topic
 
 async def handle_reactions(client):
 
@@ -12,7 +12,6 @@ async def handle_reactions(client):
             return
 
         try:
-
             chat_id = event.peer.channel_id
             message_id = event.msg_id
 
@@ -32,42 +31,29 @@ async def handle_reactions(client):
                 # 💩 удалить
                 if emoji == "💩":
 
-                    await client.delete_messages(
-                        config.FORUM_ID,
-                        message.id
-                    )
+                    delete_message(message.id)
 
                     print("💩 Лид удален")
 
                 # 🎉 лучшие
                 elif emoji == "🎉":
 
-                    await client.send_message(
-                        config.FORUM_ID,
-                        text,
-                        reply_to=config.TOPICS["best"]
-                    )
+                    send_to_topic(text, config.TOPICS["best"])
 
                     print("🎉 Лид отправлен в ЛУЧШИЕ")
 
                 # 🕊 в работу
                 elif emoji == "🕊":
 
-                    await client.send_message(
-                        config.FORUM_ID,
-                        text,
-                        reply_to=config.TOPICS["work"]
-                    )
+                    send_to_topic(text, config.TOPICS["work"])
 
                     print("🕊 Лид отправлен В РАБОТУ")
 
                 # лог реакций
-                await client.send_message(
-                    config.FORUM_ID,
+                send_to_topic(
                     f"Новая реакция {emoji}\n\n{text}",
-                    reply_to=config.TOPICS["reactions"]
+                    config.TOPICS["reactions"]
                 )
 
         except Exception as e:
-
             print("Ошибка реакции:", e)
