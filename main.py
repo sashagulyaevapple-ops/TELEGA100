@@ -118,7 +118,7 @@ client.start()
 print("✅ Telegram подключен")
 print("👀 Парсер слушает группы в реальном времени")
 
-# регистрация обработчика реакций
-handle_reactions(client)
+# запускаем обработчик реакций
+client.loop.create_task(handle_reactions(client))
 
 client.run_until_disconnected()
