@@ -5,7 +5,6 @@ import random
 import config
 import keywords
 import filters
-from sender import send_lead
 from reactions import handle_reactions
 from bot_sender import send_to_bot
 
@@ -104,15 +103,6 @@ async def handler(event):
         topic_id = config.TOPICS["hot"] if result == "HOT" else config.TOPICS["cold"]
 
         print("🔥 ГОРЯЧИЙ ЛИД" if result == "HOT" else "❄️ ХОЛОДНЫЙ ЛИД")
-
-        await send_lead(
-            client,
-            config.FORUM_ID,
-            topic_id,
-            message_text,
-            link,
-            user
-        )
 
         # отправка через бота
         send_to_bot(message_text, topic_id)
