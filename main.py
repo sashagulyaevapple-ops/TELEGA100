@@ -14,12 +14,14 @@ MAX_CACHE = 5000
 client = TelegramClient(
     config.SESSION_NAME,
     config.API_ID,
-    config.API_HASH
+    config.API_HASH,
+    receive_updates=True
 )
 
 @client.on(events.NewMessage(chats=config.SOURCE_GROUPS))
 async def handler(event):
     try:
+
         if not event.raw_text:
             return
 
@@ -86,12 +88,14 @@ async def handler(event):
 
         chat_name = chat.title if chat else "неизвестная группа"
 
-        # ссылка на сообщение
-        if chat.username:
-            link = f"https://t.me/{chat.username}/{event.id}"
-        else:
-            chat_id_short = str(chat.id)[4:]
-            link = f"https://t.me/c/{chat_id_short}/{event.id}"
+        link = ""
+
+        if chat:
+            if getattr(chat, "username", None):
+                link = f"https://t.me/{chat.username}/{event.id}"
+            else:
+                chat_id_short = str(chat.id)[4:]
+                link = f"https://t.me/c/{chat_id_short}/{event.id}"
 
         message_text = f"📢 Группа: {chat_name}\n\n💬 Сообщение:\n{text}\n\n👤 Автор: {user}"
 
@@ -104,7 +108,6 @@ async def handler(event):
 
         print("🔥 ГОРЯЧИЙ ЛИД" if result == "HOT" else "❄️ ХОЛОДНЫЙ ЛИД")
 
-        # отправка через бота
         send_to_bot(message_text, topic_id)
 
     except Exception as e:
@@ -118,7 +121,7 @@ client.start()
 print("✅ Telegram подключен")
 print("👀 Парсер слушает группы в реальном времени")
 
-# аккуратная регистрация обработчика реакций
+# регистрация системы реакций
 client.loop.create_task(handle_reactions(client))
 
 client.run_until_disconnected()
