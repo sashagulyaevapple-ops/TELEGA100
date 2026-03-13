@@ -11,15 +11,19 @@ from bot_sender import send_to_bot
 processed_messages = set()
 MAX_CACHE = 5000
 
+
 client = TelegramClient(
     config.SESSION_NAME,
     config.API_ID,
     config.API_HASH,
-    receive_updates=True
+    receive_updates=True,
+    device_model="Lead Parser Server"
 )
+
 
 @client.on(events.NewMessage(chats=config.SOURCE_GROUPS))
 async def handler(event):
+
     try:
 
         if not event.raw_text:
@@ -91,11 +95,17 @@ async def handler(event):
         link = ""
 
         if chat:
+
             if getattr(chat, "username", None):
                 link = f"https://t.me/{chat.username}/{event.id}"
+
             else:
-                chat_id_short = str(chat.id)[4:]
-                link = f"https://t.me/c/{chat_id_short}/{event.id}"
+                chat_id = str(chat.id)
+
+                if chat_id.startswith("-100"):
+                    chat_id = chat_id[4:]
+
+                link = f"https://t.me/c/{chat_id}/{event.id}"
 
         message_text = f"📢 Группа: {chat_name}\n\n💬 Сообщение:\n{text}\n\n👤 Автор: {user}"
 
@@ -108,6 +118,7 @@ async def handler(event):
 
         print("🔥 ГОРЯЧИЙ ЛИД" if result == "HOT" else "❄️ ХОЛОДНЫЙ ЛИД")
 
+        # отправка через бота
         send_to_bot(message_text, topic_id)
 
     except Exception as e:
@@ -116,12 +127,19 @@ async def handler(event):
 
 print("🚀 Подключаем Telegram...")
 
-client.start()
+client.connect()
+
+# проверка авторизации сессии
+if not client.is_user_authorized():
+    print("❌ Сессия не авторизована. Загрузите session.session")
+    exit()
 
 print("✅ Telegram подключен")
 print("👀 Парсер слушает группы в реальном времени")
 
-# регистрация системы реакций
+
+# запуск системы реакций
 client.loop.create_task(handle_reactions(client))
+
 
 client.run_until_disconnected()
