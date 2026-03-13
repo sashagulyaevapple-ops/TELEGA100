@@ -118,8 +118,7 @@ client.start()
 print("✅ Telegram подключен")
 print("👀 Парсер слушает группы в реальном времени")
 
-loop = asyncio.get_event_loop()
-
-loop.create_task(handle_reactions(client))
+# регистрация обработчика реакций
+handle_reactions(client)
 
 client.run_until_disconnected()
