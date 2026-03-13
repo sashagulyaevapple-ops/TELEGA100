@@ -9,15 +9,13 @@ async def handle_reactions(client):
     Аккаунт Telethon слушает события UpdateMessageReactions.
     Действия выполняет бот.
     """
-
     @client.on(events.Raw)
     async def reaction_handler(event):
-        # ловим только события реакций
         if event.__class__.__name__ != "UpdateMessageReactions":
             return
 
         try:
-            # получаем chat_id в зависимости от типа peer
+            # определяем chat_id
             if isinstance(event.peer, PeerChannel):
                 chat_id = event.peer.channel_id
             elif isinstance(event.peer, PeerChat):
@@ -25,6 +23,10 @@ async def handle_reactions(client):
             elif isinstance(event.peer, PeerUser):
                 chat_id = event.peer.user_id
             else:
+                return
+
+            # проверяем, что событие в нужном форуме
+            if chat_id != config.FORUM_ID:
                 return
 
             message_id = event.msg_id
@@ -35,11 +37,7 @@ async def handle_reactions(client):
                 return
             text = message.text
 
-            # проверяем, что сообщение находится в форуме, куда бот может писать
-            if chat_id != config.FORUM_ID:
-                return
-
-            # обрабатываем реакции
+            # перебираем все новые реакции
             for r in event.reactions.recent_reactions:
                 emoji = r.reaction.emoticon
 
