@@ -1,7 +1,9 @@
 from telethon import events
 from telethon.tl.types import PeerChannel, PeerChat, PeerUser, UpdateMessageReactions
+
 import config
 from bot_sender import delete_message, send_to_topic
+from storage import message_map
 
 
 async def handle_reactions(client):
@@ -13,7 +15,6 @@ async def handle_reactions(client):
             return
 
         try:
-
             # определяем chat_id
             if isinstance(event.peer, PeerChannel):
                 chat_id = event.peer.channel_id
@@ -27,19 +28,22 @@ async def handle_reactions(client):
             else:
                 return
 
-            # проверяем форум
+            # проверяем что это наш форум
             if chat_id != abs(config.FORUM_ID):
                 return
 
             message_id = event.msg_id
 
-            message = await client.get_messages(config.FORUM_ID, ids=message_id)
+            # 🔥 берём данные из кеша
+            data = message_map.get(message_id)
 
-            if not message or not message.text:
+            if not data:
+                print("⚠️ Нет данных по сообщению")
                 return
 
-            text = message.text
+            text = data["text"]
 
+            # проверка наличия реакций
             if not event.reactions:
                 return
 
@@ -52,27 +56,21 @@ async def handle_reactions(client):
 
                 # 💩 удалить
                 if emoji == "💩":
-
-                    delete_message(message.id)
-
+                    await delete_message(message_id)
                     print("💩 Лид удален")
 
                 # 🎉 BEST
                 elif emoji == "🎉":
-
-                    send_to_topic(text, config.TOPICS["best"])
-
+                    await send_to_topic(text, config.TOPICS["best"])
                     print("🎉 Лид отправлен в BEST")
 
                 # 🕊 WORK
                 elif emoji == "🕊":
-
-                    send_to_topic(text, config.TOPICS["work"])
-
+                    await send_to_topic(text, config.TOPICS["work"])
                     print("🕊 Лид отправлен в WORK")
 
-                # лог реакций
-                send_to_topic(
+                # лог всех реакций
+                await send_to_topic(
                     f"Новая реакция {emoji} на сообщение:\n{text}",
                     config.TOPICS["reactions"]
                 )

@@ -1,7 +1,7 @@
 from telethon import TelegramClient, events
 import asyncio
 import random
-
+from storage import message_map
 import config
 import keywords
 import filters
@@ -119,7 +119,14 @@ async def handler(event):
 
         print("🔥 ГОРЯЧИЙ ЛИД" if result == "HOT" else "❄️ ХОЛОДНЫЙ ЛИД")
 
-        send_to_bot(message_text, topic_id)
+       msg = send_to_bot(message_text, topic_id)
+
+# сохраняем сообщение для реакций
+if msg:
+    message_map[msg.id] = {
+        "text": message_text,
+        "topic": topic_id
+    }
 
     except Exception as e:
         print("Ошибка:", e)

@@ -1,37 +1,36 @@
-import requests
+from telethon import TelegramClient
 import config
+import asyncio
 
-BASE_URL = f"https://api.telegram.org/bot{config.BOT_TOKEN}"
+client = TelegramClient(
+    config.SESSION_NAME,
+    config.API_ID,
+    config.API_HASH
+)
+
+
+async def send_to_bot_async(text, topic_id):
+    await client.connect()
+
+    msg = await client.send_message(
+        config.FORUM_ID,
+        text,
+        reply_to=topic_id
+    )
+
+    return msg
 
 
 def send_to_bot(text, topic_id):
-
-    payload = {
-        "chat_id": config.BOT_CHAT_ID,
-        "text": text,
-        "message_thread_id": topic_id,
-        "disable_web_page_preview": True
-    }
-
-    requests.post(f"{BASE_URL}/sendMessage", data=payload)
+    loop = asyncio.get_event_loop()
+    return loop.run_until_complete(send_to_bot_async(text, topic_id))
 
 
-def delete_message(message_id):
-
-    payload = {
-        "chat_id": config.BOT_CHAT_ID,
-        "message_id": message_id
-    }
-
-    requests.post(f"{BASE_URL}/deleteMessage", data=payload)
+async def delete_message(message_id):
+    await client.connect()
+    await client.delete_messages(config.FORUM_ID, message_id)
 
 
-def send_to_topic(text, topic_id):
-
-    payload = {
-        "chat_id": config.BOT_CHAT_ID,
-        "text": text,
-        "message_thread_id": topic_id
-    }
-
-    requests.post(f"{BASE_URL}/sendMessage", data=payload)
+async def send_to_topic(text, topic_id):
+    await client.connect()
+    await client.send_message(config.FORUM_ID, text, reply_to=topic_id)
